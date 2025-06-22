@@ -3,7 +3,7 @@
 </script>
 
 <template>
-    GoTodo
+
 </template>
 
 <style scoped>
