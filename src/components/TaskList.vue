@@ -1,15 +1,14 @@
 <template>
   <div class="task-list">
-    <h2 class="list-title">阅读计划</h2>
+    <h2 class="list-title">任务列表</h2>
     <div class="task-items">
       <div
         v-for="task in tasks"
-        :key="task.id"
+        :key="task.taskId"
         class="task-item"
-        :class="{ selected: task.id === selectedTaskId }"
-        @click="$emit('select-task', task.id)"
+        :class="{ selected: task.taskId === selectedTaskId }"
+        @click="$emit('select-task', task.taskId)"
       >
-        <span class="circle"></span>
         <span class="task-title">{{ task.title }}</span>
       </div>
     </div>
@@ -26,13 +25,36 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { listTaskByCategoryId } from '@/api/task'
+
 const props = defineProps({
-  tasks: Array,
   selectedTaskId: Number
 })
 const emit = defineEmits(['add-task', 'select-task'])
+const route = useRoute()
+const tasks = ref([])
 const newTaskTitle = ref('')
+
+async function fetchTasks(categoryId) {
+  if (!categoryId) return
+  const res = await listTaskByCategoryId(categoryId)
+  if (Array.isArray(res.data)) {
+    tasks.value = res.data.slice().sort((a, b) => a.sortOrder - b.sortOrder)
+  } else {
+    tasks.value = []
+  }
+}
+
+onMounted(() => {
+  fetchTasks(route.params.categoryId)
+})
+
+watch(() => route.params.categoryId, (newId) => {
+  fetchTasks(newId)
+})
+
 function handleAddTask() {
   if (!newTaskTitle.value.trim()) return
   emit('add-task', newTaskTitle.value)
@@ -81,14 +103,6 @@ function handleAddTask() {
 }
 .task-item:hover {
   background: #e9ebf5;
-}
-.circle {
-  width: 24px;
-  height: 24px;
-  border: 2px solid #888;
-  border-radius: 50%;
-  margin-right: 16px;
-  display: inline-block;
 }
 .task-title {
   flex: 1;

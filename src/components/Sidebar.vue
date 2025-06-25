@@ -13,6 +13,16 @@
       >
         {{ item.label }}
       </div>
+      <hr v-if="dynamicMenuItems.length" class="sidebar-divider" />
+      <div
+        v-for="(item, idx) in dynamicMenuItems"
+        :key="item.itemType + '-' + item.itemRefId"
+        class="menu-item"
+        @click="selectDynamicMenuItem(item, idx)"
+        :class="{ 'active': activeDynamicIndex === idx }"
+      >
+        {{ item.itemName }}
+      </div>
     </div>
     <div class="sidebar-bottom">
       <button class="sidebar-btn" @click="onCreateList">
@@ -28,7 +38,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { listDisplayItems } from '@/api/displayItem'
+import { createTaskCategory } from '@/api/category'
+import { saveGroup } from '@/api/group'
+import { useRouter } from 'vue-router'
 
 const menuItems = ref([
   { id: 1, label: '我的一天' },
@@ -36,16 +50,25 @@ const menuItems = ref([
   { id: 3, label: '任务' },
   { id: 4, label: '便签' },
 ])
-
+const dynamicMenuItems = ref([])
 const activeItem = ref(1)
-
-import { useRouter } from 'vue-router'
-
+const activeDynamicIndex = ref(null)
 const router = useRouter()
+
+const fetchDynamicMenu = async () => {
+  try {
+    const res = await listDisplayItems()
+    if (res && res.code === 0 && Array.isArray(res.data)) {
+      dynamicMenuItems.value = res.data.slice().sort((a, b) => a.sortOrder - b.sortOrder)
+    }
+  } catch (e) {
+    // 错误已在api层处理
+  }
+}
 
 const selectMenuItem = (item) => {
   activeItem.value = item.id
-  
+  activeDynamicIndex.value = null
   // 根据菜单项跳转到对应路由
   switch(item.id) {
     case 1:
@@ -63,12 +86,32 @@ const selectMenuItem = (item) => {
   }
 }
 
-// 新建列表和新建组的点击事件（暂时只弹窗提示）
-function onCreateList() {
-  alert('新建列表功能待实现')
+const selectDynamicMenuItem = (item, idx) => {
+  if (item.itemType === 'group') return
+  activeItem.value = null
+  activeDynamicIndex.value = idx
+  if (item.itemType === 'category') {
+    router.push({ name: 'tasks', params: { categoryId: item.itemRefId } })
+  }
 }
-function onCreateGroup() {
-  alert('创建新组功能待实现')
+
+onMounted(fetchDynamicMenu)
+
+async function onCreateList() {
+  const name = window.prompt('请输入新建列表名称')
+  if (!name || !name.trim()) return
+  try {
+    await createTaskCategory(name.trim())
+    await fetchDynamicMenu()
+  } catch (e) {}
+}
+async function onCreateGroup() {
+  const name = window.prompt('请输入新建组名称')
+  if (!name || !name.trim()) return
+  try {
+    await saveGroup(name.trim())
+    await fetchDynamicMenu()
+  } catch (e) {}
 }
 </script>
 
@@ -106,6 +149,12 @@ function onCreateGroup() {
 .menu-item.active {
   background: #e3f2fd;
   color: #1976d2;
+}
+
+.sidebar-divider {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 10px 0 10px 0;
 }
 
 .sidebar-bottom {

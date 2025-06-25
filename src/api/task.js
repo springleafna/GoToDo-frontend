@@ -1,5 +1,4 @@
 import request from '@/utils/request'
-import { message } from 'antd'
 
 /**
  * 创建任务
@@ -48,6 +47,23 @@ export const deleteTask = async (taskId) => {
   } catch (err) {
     console.error('删除任务失败:', err)
     message.error('删除任务失败')
+    throw err
+  }
+}
+
+/**
+ * 根据任务ID获取任务详情
+ * @param {number} taskId - 任务ID
+ */
+export const getTaskDetail = async (taskId) => {
+  try {
+    const res = await request.get('/task/detail', {
+      params: {taskId}
+    })
+    return res
+  } catch (err) {
+    console.error('获取任务详情失败:', err)
+    message.error('获取任务详情失败')
     throw err
   }
 }

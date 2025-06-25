@@ -2,27 +2,44 @@
   <div class="task-detail">
     <button class="close-btn" @click="$emit('close')">×</button>
     <div v-if="task">
-      <div class="detail-title">
-        <span class="circle"></span>
-        <span>{{ task.title }}</span>
-      </div>
-      <div class="detail-info">
-        <div class="info-label">创建于：</div>
-        <div class="info-value">{{ task.createdAt }}</div>
-      </div>
-      <div class="detail-info">
-        <div class="info-label">详情：</div>
-        <div class="info-value">{{ task.detail || '暂无详情' }}</div>
-      </div>
+      <div class="detail-title">{{ task.title }}</div>
+      <div class="detail-info"><span class="info-label">备注：</span><span class="info-value">{{ task.remark || '无' }}</span></div>
+      <div class="detail-info"><span class="info-label">截止时间：</span><span class="info-value">{{ task.endTime || '无' }}</span></div>
+      <div class="detail-info"><span class="info-label">提醒时间：</span><span class="info-value">{{ task.reminderTime || '无' }}</span></div>
+      <div class="detail-info"><span class="info-label">优先级：</span><span class="info-value">{{ priorityText }}</span></div>
+      <div class="detail-info"><span class="info-label">创建时间：</span><span class="info-value">{{ task.createTime }}</span></div>
     </div>
     <div v-else class="empty-detail">请选择左侧任务查看详情</div>
   </div>
 </template>
 
 <script setup>
+import { ref, watch, onMounted, computed } from 'vue'
+import { getTaskDetail } from '@/api/task'
 const props = defineProps({
-  task: Object
+  taskId: Number
 })
+const task = ref(null)
+
+const priorityText = computed(() => {
+  if (!task.value) return '无'
+  switch (task.value.priority) {
+    case 0: return '低'
+    case 1: return '中'
+    case 2: return '高'
+    default: return '无'
+  }
+})
+
+async function fetchDetail(id) {
+  if (!id) { task.value = null; return }
+  const res = await getTaskDetail(id)
+  task.value = res.data || null
+}
+
+watch(() => props.taskId, (id) => {
+  fetchDetail(id)
+}, { immediate: true })
 </script>
 
 <style scoped>

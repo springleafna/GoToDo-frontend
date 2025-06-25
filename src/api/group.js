@@ -1,5 +1,4 @@
 import request from '@/utils/request'
-import { message } from 'antd'
 
 /**
  * 将一个任务类移动到某个任务组下

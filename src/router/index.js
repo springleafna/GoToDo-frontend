@@ -24,7 +24,7 @@ const router = createRouter({
       component: ImportantView,
     },
     {
-      path: '/tasks',
+      path: '/tasks/:categoryId?',
       name: 'tasks',
       component: TasksView,
     },

@@ -1,5 +1,4 @@
 import request from '@/utils/request'
-import { message } from 'antd'
 
 /**
  * 收藏或取消收藏任务

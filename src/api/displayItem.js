@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import { message } from 'antd'
+
 
 /**
  * 获取所有的展示项

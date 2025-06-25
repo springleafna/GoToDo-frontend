@@ -1,5 +1,4 @@
 import request from '@/utils/request'
-import { message } from 'antd'
 
 /**
  * 获取任务分类列表
