@@ -6,6 +6,7 @@
           v-model="selectedMemo.title"
           @blur="handleUpdateMemo()"
           class="memo-title"
+          placeholder="输入标题"
         />
         <div class="memo-date">{{ selectedMemo.createdAt }}</div>
         <textarea
@@ -179,21 +180,38 @@ function handleSearchMemo() {
 .memo-detail-wrapper {
   flex: 1;
   min-width: 0;
-  margin-right: 340px;
-  padding: 48px 0 0 48px;
+  margin: 0 auto;
+  padding: 60px;
+  max-width: 1200px;
+  width: 90%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   height: 100vh;
-  box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
+  @media (min-width: 769px) {
+    margin-right: 340px;
+  }
 }
 .memo-title {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: bold;
-  margin-bottom: 18px;
-  color: #222; /* 深色标题 */
+  margin: 0 auto 24px;
+  padding: 16px 20px;
+  color: #222;
   border: none;
   outline: none;
+  background: rgba(255,255,255,0.7);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(31,38,135,0.04);
+  transition: box-shadow 0.2s;
+  width: 100%;
+  max-width: 800px;
+}
+.memo-title:focus {
+  box-shadow: 0 4px 16px rgba(31,38,135,0.10);
 }
 .memo-date {
   color: #888;
@@ -201,20 +219,44 @@ function handleSearchMemo() {
   margin-bottom: 24px;
 }
 .memo-content {
-  font-size: 1.15rem;
-  color: #666; /* 浅色内容 */
-  line-height: 1.8;
+  font-size: 1.25rem;
+  color: #444;
+  line-height: 1.4;
   white-space: pre-wrap;
   border: none;
   outline: none;
   flex: 1;
   resize: none;
+  background: rgba(255,255,255,0.7);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 8px auto 0;
+  box-shadow: 0 2px 8px rgba(31,38,135,0.04);
+  transition: box-shadow 0.2s;
+  width: 100%;
+  max-width: 800px;
+  height: 70vh;
+}
+.memo-content:focus {
+  box-shadow: 0 4px 16px rgba(31,38,135,0.10);
+}
+.memo-date {
+  color: #888;
+  font-size: 0.98rem;
+  margin-bottom: 24px;
+  margin-left: 4px;
 }
 .empty-detail {
   color: #888;
   font-size: 1.1rem;
-  margin-top: 60px;
+  margin: 60px auto 0;
   text-align: center;
+  background: rgba(255,255,255,0.5);
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(31,38,135,0.04);
+  max-width: 800px;
+  width: 90%;
 }
 .memo-list-wrapper {
   position: absolute;
@@ -235,6 +277,13 @@ function handleSearchMemo() {
   display: flex;
   flex-direction: column;
   padding: 32px 0 0 0;
+  @media (max-width: 768px) {
+    width: 100%;
+    position: relative;
+    height: auto;
+    box-shadow: none;
+    margin-top: 20px;
+  }
 }
 .memo-list-title {
   font-size: 1.2rem;
