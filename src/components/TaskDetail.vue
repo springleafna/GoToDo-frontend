@@ -1,16 +1,18 @@
 <template>
-  <div class="task-detail">
-    <button class="close-btn" @click="$emit('close')">×</button>
-    <div v-if="task">
-      <div class="detail-title">{{ task.title }}</div>
-      <div class="detail-info"><span class="info-label">备注：</span><span class="info-value">{{ task.remark || '无' }}</span></div>
-      <div class="detail-info"><span class="info-label">截止时间：</span><span class="info-value">{{ task.endTime || '无' }}</span></div>
-      <div class="detail-info"><span class="info-label">提醒时间：</span><span class="info-value">{{ task.reminderTime || '无' }}</span></div>
-      <div class="detail-info"><span class="info-label">优先级：</span><span class="info-value">{{ priorityText }}</span></div>
-      <div class="detail-info"><span class="info-label">创建时间：</span><span class="info-value">{{ task.createTime }}</span></div>
+  <transition name="slide-detail">
+    <div class="task-detail">
+      <button class="close-btn" @click="$emit('close')">×</button>
+      <div v-if="task">
+        <div class="detail-title">{{ task.title }}</div>
+        <div class="detail-info"><span class="info-label">备注：</span><span class="info-value">{{ task.remark || '无' }}</span></div>
+        <div class="detail-info"><span class="info-label">截止时间：</span><span class="info-value">{{ task.endTime || '无' }}</span></div>
+        <div class="detail-info"><span class="info-label">提醒时间：</span><span class="info-value">{{ task.reminderTime || '无' }}</span></div>
+        <div class="detail-info"><span class="info-label">优先级：</span><span class="info-value">{{ priorityText }}</span></div>
+        <div class="detail-info"><span class="info-label">创建时间：</span><span class="info-value">{{ task.createTime }}</span></div>
+      </div>
+      <div v-else class="empty-detail">请选择左侧任务查看详情</div>
     </div>
-    <div v-else class="empty-detail">请选择左侧任务查看详情</div>
-  </div>
+  </transition>
 </template>
 
 <script setup>
@@ -44,14 +46,15 @@ watch(() => props.taskId, (id) => {
 
 <style scoped>
 .task-detail {
-  width: 350px;
+  width: 300px;
   background: #fff;
-  height: 100vh;
+  max-height: 100vh;
   box-shadow: -2px 0 8px rgba(0,0,0,0.04);
   padding: 32px 24px 0 24px;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow-y: auto;
 }
 .close-btn {
   position: absolute;
@@ -101,4 +104,15 @@ watch(() => props.taskId, (id) => {
   margin-top: 60px;
   text-align: center;
 }
-</style> 
+.slide-detail-enter-active, .slide-detail-leave-active {
+  transition: all 0.35s cubic-bezier(.4,1.3,.6,1);
+}
+.slide-detail-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.slide-detail-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+</style>

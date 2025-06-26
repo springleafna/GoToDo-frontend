@@ -24,11 +24,7 @@ import { ref, computed } from 'vue'
 import TaskList from '../components/TaskList.vue'
 import TaskDetail from '../components/TaskDetail.vue'
 
-const tasks = ref([
-  { id: 1, title: 'Java并发编程的艺术', detail: '阅读计划任务1', createdAt: '2024-06-04' },
-  { id: 2, title: 'Java核心技术卷Ⅰ', detail: '阅读计划任务2', createdAt: '2024-06-04' },
-  { id: 3, title: 'Effective Java', detail: '阅读计划任务3', createdAt: '2024-06-04' },
-])
+const tasks = ref([])
 const selectedTaskId = ref(null)
 
 const selectedTask = computed(() => tasks.value.find(t => t.id === selectedTaskId.value))

@@ -27,7 +27,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { listTaskByCategoryId } from '@/api/task'
+import { listTaskByCategoryId, saveTask } from '@/api/task'
 
 const props = defineProps({
   selectedTaskId: Number
@@ -55,10 +55,20 @@ watch(() => route.params.categoryId, (newId) => {
   fetchTasks(newId)
 })
 
-function handleAddTask() {
-  if (!newTaskTitle.value.trim()) return
-  emit('add-task', newTaskTitle.value)
-  newTaskTitle.value = ''
+async function handleAddTask() {
+  const title = newTaskTitle.value.trim()
+  if (!title) return
+  try {
+    const categoryId = Number(route.params.categoryId)
+    await saveTask({
+      title,
+      categoryId
+    })
+    newTaskTitle.value = ''
+    await fetchTasks(categoryId)
+  } catch (err) {
+    console.error('添加任务失败:', err)
+  }
 }
 </script>
 
@@ -96,6 +106,7 @@ function handleAddTask() {
   cursor: pointer;
   transition: background 0.18s;
   border: 1px solid transparent;
+  margin: 0 32px 0 0;
 }
 .task-item.selected {
   background: #e3eafd;
@@ -114,12 +125,12 @@ function handleAddTask() {
   background: #eceffd;
   border-radius: 8px;
   padding: 12px 18px;
-  margin-top: 0;
   position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
   z-index: 2;
+  margin: 0 32px 16px 0;
 }
 .plus {
   font-size: 1.3rem;
@@ -134,4 +145,4 @@ function handleAddTask() {
   flex: 1;
   color: #222;
 }
-</style> 
+</style>

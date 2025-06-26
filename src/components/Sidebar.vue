@@ -5,7 +5,7 @@
     </div>
     <div class="sidebar-menu">
       <div 
-        v-for="item in menuItems" 
+        v-for="item in menuItems"
         :key="item.id"
         class="menu-item"
         @click="selectMenuItem(item)"
@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { listDisplayItems } from '@/api/displayItem'
 import { createTaskCategory } from '@/api/category'
 import { saveGroup } from '@/api/group'
@@ -51,7 +51,7 @@ const menuItems = ref([
   { id: 4, label: '便签' },
 ])
 const dynamicMenuItems = ref([])
-const activeItem = ref(1)
+const activeItem = ref(null)
 const activeDynamicIndex = ref(null)
 const router = useRouter()
 
@@ -63,6 +63,30 @@ const fetchDynamicMenu = async () => {
     }
   } catch (e) {
     // 错误已在api层处理
+  }
+}
+
+const initActiveItem = () => {
+  const currentRoute = router.currentRoute.value.name
+  switch(currentRoute) {
+    case 'my-day':
+      activeItem.value = 1
+      break
+    case 'important':
+      activeItem.value = 2
+      break
+    case 'tasks':
+      if (!router.currentRoute.value.params.categoryId) {
+        activeItem.value = 3
+      } else {
+        activeItem.value = null
+        const categoryId = Number(router.currentRoute.value.params.categoryId)
+        activeDynamicIndex.value = dynamicMenuItems.value.findIndex(item => item.itemType === 'category' && item.itemRefId === categoryId)
+      }
+      break
+    case 'memos':
+      activeItem.value = 4
+      break
   }
 }
 
@@ -95,7 +119,12 @@ const selectDynamicMenuItem = (item, idx) => {
   }
 }
 
-onMounted(fetchDynamicMenu)
+onMounted(async () => {
+  await fetchDynamicMenu()
+  initActiveItem()
+})
+
+watch(() => router.currentRoute.value, initActiveItem)
 
 async function onCreateList() {
   const name = window.prompt('请输入新建列表名称')
