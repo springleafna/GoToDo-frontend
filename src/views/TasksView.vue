@@ -20,14 +20,28 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { listTaskByCategoryId } from '@/api/task'
+import { useRoute } from 'vue-router'
 import TaskList from '../components/TaskList.vue'
 import TaskDetail from '../components/TaskDetail.vue'
 
 const tasks = ref([])
 const selectedTaskId = ref(null)
+const route = useRoute()
 
-const selectedTask = computed(() => tasks.value.find(t => t.id === selectedTaskId.value))
+watch(
+  () => route.params.categoryId,
+  async (categoryId) => {
+    if (categoryId) {
+      const res = await listTaskByCategoryId(categoryId)
+      tasks.value = res.data || []
+    }
+  },
+  { immediate: true }
+)
+
+const selectedTask = computed(() => tasks.value.find(t => t.taskId === selectedTaskId.value))
 
 function addTask(title) {
   if (!title.trim()) return
@@ -93,4 +107,4 @@ function closeDetail() {
   transform: translateX(100%);
   opacity: 0;
 }
-</style> 
+</style>

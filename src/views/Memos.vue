@@ -171,14 +171,16 @@ function handleSearchMemo() {
   display: flex;
   height: 100%;
   width: 100%;
+  position: relative;
   background: linear-gradient(180deg, #6b8ce3 0%, #7fa6e3 100%);
   overflow: hidden;
+  padding-right: 0;
 }
 .memo-detail-wrapper {
-  flex: 1 1 0;
+  flex: 1;
   min-width: 0;
-  max-width: 60%;
-  padding: 48px 36px 0 48px;
+  margin-right: 340px;
+  padding: 48px 0 0 48px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -215,9 +217,18 @@ function handleSearchMemo() {
   text-align: center;
 }
 .memo-list-wrapper {
+  position: absolute;
+  right: 0;
+  top: 0;
   width: 340px;
+  box-sizing: border-box;
+  padding-right: 0;
   min-width: 260px;
-  max-width: 400px;
+  max-width: none;
+  margin-left: auto;
+  margin-right: 0;
+  margin-left: auto;
+  margin-right: 0;
   background: #f5f6fa;
   height: 100vh;
   box-shadow: -2px 0 8px rgba(0,0,0,0.04);
