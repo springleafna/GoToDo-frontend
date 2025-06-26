@@ -2,37 +2,48 @@
   <div class="memos-main-content">
     <div class="memo-detail-wrapper">
       <div v-if="selectedMemo">
-        <div class="memo-title">{{ selectedMemo.title }}</div>
+        <input
+          v-model="selectedMemo.title"
+          @blur="handleUpdateMemo()"
+          class="memo-title"
+        />
         <div class="memo-date">{{ selectedMemo.createdAt }}</div>
-        <div class="memo-content">{{ selectedMemo.content }}</div>
+        <textarea
+          v-model="selectedMemo.content"
+          @blur="handleUpdateMemo()"
+          class="memo-content"
+          placeholder="输入内容"
+        ></textarea>
       </div>
       <div v-else class="empty-detail">请选择右侧便签查看内容</div>
     </div>
     <div class="memo-list-wrapper">
-      <div class="memo-list-title">便签列表</div>
-      <div class="add-memo-bar">
-        <input
-          v-model="newMemoTitle"
-          @keyup.enter="handleAddMemo"
-          placeholder="输入标题并回车新建便签"
-          class="add-memo-input"
-        />
+      <div class="memo-list-title-row">
+        <div class="memo-list-title">便签列表</div>
         <button class="add-memo-btn" @click="handleAddMemo">＋</button>
+      </div>
+      <div class="search-memo-bar">
+        <input
+          v-model="searchKeyword"
+          @keyup.enter="handleSearchMemo"
+          placeholder="搜索便签"
+          class="search-memo-input"
+        />
       </div>
       <div class="memo-list">
         <div
           v-for="memo in memos"
-          :key="memo.id"
+          :key="memo.memoId"
           class="memo-list-item"
-          :class="{ selected: memo.id === selectedMemoId }"
-          @click="selectMemo(memo.id)"
+          :class="{ selected: memo.memoId === selectedMemoId }"
+          @click="selectMemo(memo.memoId)"
         >
           <div class="memo-list-title-row">
             <span class="memo-list-title-text">{{ memo.title }}</span>
             <span class="memo-list-date">{{ memo.createdAt }}</span>
-            <button class="delete-memo-btn" @click.stop="deleteMemo(memo.id)">×</button>
+            <button class="delete-memo-btn" @click.stop="deleteMemo(memo.memoId)">×</button>
           </div>
-          <div class="memo-list-preview">{{ memo.content.slice(0, 24) }}{{ memo.content.length > 24 ? '...' : '' }}</div>
+          <div class="memo-list-preview">{{ memo.content ? memo.content.slice(0, 24) : '' }}{{ memo.content && memo.content.length > 24 ? '...' : '' }}</div>
         </div>
       </div>
     </div>
@@ -40,39 +51,118 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import {
+  saveMemo,
+  getMemoList,
+  updateMemo,
+  deleteMemo as apiDeleteMemo,
+  getMemoDetail
+} from '@/api/memo'
 
-const memos = ref([
-  { id: 1, title: '会议记录', content: '今天讨论了项目进度和下周计划。', createdAt: '2024-06-04' },
-  { id: 2, title: '学习笔记', content: 'Vue3组合式API非常灵活，适合大型项目。', createdAt: '2024-06-03' },
-  { id: 3, title: '灵感', content: '可以做一个极简风格的待办和便签应用。', createdAt: '2024-06-02' },
-])
-const selectedMemoId = ref(memos.value[0]?.id || null)
-const selectedMemo = computed(() => memos.value.find(m => m.id === selectedMemoId.value))
+const memos = ref([])
+const selectedMemoId = ref(null)
+const selectedMemo = ref(null)
 const newMemoTitle = ref('')
+const searchKeyword = ref('')
+
+// 防抖函数
+const debounce = (fn, delay) => {
+  let timer = null
+  return (...args) => {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => {
+      fn.apply(this, args)
+    }, delay)
+  }
+}
+
+// 获取便签列表
+const fetchMemos = async () => {
+  try {
+    const res = await getMemoList()
+    memos.value = res.data
+  } catch (err) {
+    console.error('获取便签列表失败:', err)
+  }
+}
+
+fetchMemos()
 
 function selectMemo(id) {
   selectedMemoId.value = id
+  selectedMemo.value = memos.value.find(m => m.memoId === id)
 }
 
-function handleAddMemo() {
-  const title = newMemoTitle.value.trim()
-  if (!title) return
-  const id = Date.now()
-  const createdAt = new Date().toISOString().slice(0, 10)
-  memos.value.unshift({ id, title, content: '', createdAt })
-  selectedMemoId.value = id
-  newMemoTitle.value = ''
-}
-
-function deleteMemo(id) {
-  const idx = memos.value.findIndex(m => m.id === id)
-  if (idx !== -1) {
-    memos.value.splice(idx, 1)
-    if (selectedMemoId.value === id) {
-      selectedMemoId.value = memos.value[0]?.id || null
-    }
+async function handleAddMemo() {
+  try {
+    const res = await saveMemo()
+    memos.value.unshift({ memoId: res, title: '', content: '' })
+    selectedMemoId.value = res
+    selectedMemo.value = memos.value[0]
+  } catch (err) {
+    console.error('创建便签失败:', err)
   }
+}
+
+async function handleDeleteMemo(id) {
+  try {
+    await apiDeleteMemo(id)
+    const idx = memos.value.findIndex(m => m.memoId === id)
+    if (idx !== -1) {
+      memos.value.splice(idx, 1)
+      if (selectedMemoId.value === id) {
+        selectedMemoId.value = memos.value[0]?.memoId || null
+      }
+    }
+  } catch (err) {
+    console.error('删除便签失败:', err)
+  }
+}
+
+// 存储原始内容用于比较
+const originalMemo = ref(null)
+
+watch(selectedMemo, (newVal) => {
+  if (newVal) {
+    originalMemo.value = JSON.parse(JSON.stringify(newVal))
+  }
+}, { immediate: true })
+
+async function handleUpdateMemo() {
+  if (selectedMemo.value && selectedMemo.value.memoId) {
+    try {
+      // 比较内容是否有变化
+      if (JSON.stringify(selectedMemo.value) !== JSON.stringify(originalMemo.value)) {
+        await updateMemo({
+          memoId: selectedMemo.value.memoId,
+          title: selectedMemo.value.title,
+          content: selectedMemo.value.content
+        })
+        originalMemo.value = JSON.parse(JSON.stringify(selectedMemo.value))
+      }
+    } catch (err) {
+      console.error('更新便签失败:', err)
+    }
+  } else if (selectedMemo.value && !selectedMemo.value.memoId) {
+    console.warn('未找到 memoId，无法更新')
+  }
+}
+
+// 监听 selectedMemo 变化，实现自动保存
+watch(
+  () => selectedMemo.value,
+  debounce(async (newVal) => {
+    if (newVal) {
+      await handleUpdateMemo()
+    }
+  }, 2000),
+  { deep: true }
+)
+
+// 预留搜索接口
+function handleSearchMemo() {
+  // 后续实现搜索逻辑
 }
 </script>
 
@@ -100,7 +190,9 @@ function deleteMemo(id) {
   font-size: 1.6rem;
   font-weight: bold;
   margin-bottom: 18px;
-  color: #222;
+  color: #222; /* 深色标题 */
+  border: none;
+  outline: none;
 }
 .memo-date {
   color: #888;
@@ -109,9 +201,13 @@ function deleteMemo(id) {
 }
 .memo-content {
   font-size: 1.15rem;
-  color: #333;
+  color: #666; /* 浅色内容 */
   line-height: 1.8;
   white-space: pre-wrap;
+  border: none;
+  outline: none;
+  flex: 1;
+  resize: none;
 }
 .empty-detail {
   color: #888;
@@ -197,8 +293,28 @@ function deleteMemo(id) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 18px;
+  padding-left: 32px;
+  padding-right: 16px;
+}
+
+.search-memo-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 16px 12px 16px;
   gap: 8px;
+}
+
+.search-memo-input {
+  flex: 1;
+  border: none;
+  background: #fff;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  color: #222;
+  outline: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 .memo-list-title-text {
   font-weight: bold;
