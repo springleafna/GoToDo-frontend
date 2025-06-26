@@ -178,7 +178,6 @@ function handleSearchMemo() {
   flex: 1 1 0;
   min-width: 0;
   max-width: 60%;
-  background: #fff;
   padding: 48px 36px 0 48px;
   display: flex;
   flex-direction: column;

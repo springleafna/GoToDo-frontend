@@ -47,7 +47,6 @@ watch(() => props.taskId, (id) => {
 <style scoped>
 .task-detail {
   width: 300px;
-  background: #fff;
   max-height: 100vh;
   box-shadow: -2px 0 8px rgba(0,0,0,0.04);
   padding: 32px 24px 0 24px;
