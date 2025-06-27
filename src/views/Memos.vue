@@ -2,49 +2,37 @@
   <div class="memos-main-content">
     <div class="memo-detail-wrapper">
       <div v-if="selectedMemo">
-        <input
-          v-model="selectedMemo.title"
-          @blur="handleUpdateMemo()"
-          class="memo-title"
-          placeholder="输入标题"
-        />
+        <input v-model="selectedMemo.title" @blur="handleUpdateMemo()" class="memo-title" placeholder="输入标题" />
         <div class="memo-date">{{ selectedMemo.createdAt }}</div>
-        <textarea
-          v-model="selectedMemo.content"
-          @blur="handleUpdateMemo()"
-          class="memo-content"
-          placeholder="输入内容"
-        ></textarea>
+        <textarea v-model="selectedMemo.content" @blur="handleUpdateMemo()" class="memo-content"
+          placeholder="输入内容"></textarea>
       </div>
       <div v-else class="empty-detail">请选择右侧便签查看内容</div>
     </div>
     <div class="memo-list-wrapper">
-      <div class="memo-list-title-row">
+      <div class="memo-list-title-head">
         <div class="memo-list-title">便签列表</div>
         <button class="add-memo-btn" @click="handleAddMemo">＋</button>
       </div>
       <div class="search-memo-bar">
-        <input
-          v-model="searchKeyword"
-          @keyup.enter="handleSearchMemo"
-          placeholder="搜索便签"
-          class="search-memo-input"
-        />
+        <input v-model="searchKeyword" @keyup.enter="handleSearchMemo" placeholder="搜索便签" class="search-memo-input" />
       </div>
       <div class="memo-list">
-        <div
-          v-for="memo in memos"
-          :key="memo.memoId"
-          class="memo-list-item"
-          :class="{ selected: memo.memoId === selectedMemoId }"
-          @click="selectMemo(memo.memoId)"
-        >
+        <div v-for="memo in memos" :key="memo.memoId" class="memo-list-item"
+          :class="{ selected: memo.memoId === selectedMemoId }" @click="selectMemo(memo.memoId)">
           <div class="memo-list-title-row">
-            <span class="memo-list-title-text">{{ memo.title }}</span>
-            <span class="memo-list-date">{{ memo.createdAt }}</span>
+            <template v-if="memo.title.trim()">
+              <span class="memo-list-title-text">{{ memo.title }}</span>
+            </template>
+            <template v-else>
+              <span class="memo-list-preview-text">{{ memo.content ? memo.content.slice(0, 24) : '' }}{{ memo.content &&
+                memo.content.length > 24 ? '...' : '' }}</span>
+            </template>
+          </div>
+          <div class="memo-list-date-row">
+            <span class="memo-list-date">{{ formatDate(memo.createTime) }}</span>
             <button class="delete-memo-btn" @click.stop="deleteMemo(memo.memoId)">×</button>
           </div>
-          <div class="memo-list-preview">{{ memo.content ? memo.content.slice(0, 24) : '' }}{{ memo.content && memo.content.length > 24 ? '...' : '' }}</div>
         </div>
       </div>
     </div>
@@ -52,6 +40,19 @@
 </template>
 
 <script setup>
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).replace(/\//g, '-');
+}
+
 import { ref, computed, watch } from 'vue'
 import {
   saveMemo,
@@ -97,12 +98,14 @@ function selectMemo(id) {
 
 async function handleAddMemo() {
   try {
-    const res = await saveMemo()
-    memos.value.unshift({ memoId: res, title: '', content: '' })
-    selectedMemoId.value = res
-    selectedMemo.value = memos.value[0]
+    const newMemo = { title: '', content: '', createTime: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z') };
+    const res = await saveMemo(newMemo);
+    const createdMemo = { ...newMemo, memoId: res };
+    memos.value.unshift(createdMemo);
+    selectedMemoId.value = res;
+    selectedMemo.value = createdMemo;
   } catch (err) {
-    console.error('创建便签失败:', err)
+    console.error('创建便签失败:', err);
   }
 }
 
@@ -177,6 +180,7 @@ function handleSearchMemo() {
   overflow: hidden;
   padding-right: 0;
 }
+
 .memo-detail-wrapper {
   flex: 1;
   min-width: 0;
@@ -191,10 +195,12 @@ function handleSearchMemo() {
   backdrop-filter: blur(12px);
   border-radius: 18px;
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
+
   @media (min-width: 769px) {
     margin-right: 340px;
   }
 }
+
 .memo-title {
   font-size: 1.8rem;
   font-weight: bold;
@@ -203,21 +209,24 @@ function handleSearchMemo() {
   color: #222;
   border: none;
   outline: none;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.7);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(31,38,135,0.04);
+  box-shadow: 0 2px 8px rgba(31, 38, 135, 0.04);
   transition: box-shadow 0.2s;
   width: 100%;
   max-width: 800px;
 }
+
 .memo-title:focus {
-  box-shadow: 0 4px 16px rgba(31,38,135,0.10);
+  box-shadow: 0 4px 16px rgba(31, 38, 135, 0.10);
 }
+
 .memo-date {
   color: #888;
   font-size: 0.98rem;
   margin-bottom: 24px;
 }
+
 .memo-content {
   font-size: 1.25rem;
   color: #444;
@@ -227,37 +236,41 @@ function handleSearchMemo() {
   outline: none;
   flex: 1;
   resize: none;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.7);
   border-radius: 8px;
   padding: 24px;
   margin: 8px auto 0;
-  box-shadow: 0 2px 8px rgba(31,38,135,0.04);
+  box-shadow: 0 2px 8px rgba(31, 38, 135, 0.04);
   transition: box-shadow 0.2s;
   width: 100%;
   max-width: 800px;
   height: 70vh;
 }
+
 .memo-content:focus {
-  box-shadow: 0 4px 16px rgba(31,38,135,0.10);
+  box-shadow: 0 4px 16px rgba(31, 38, 135, 0.10);
 }
+
 .memo-date {
   color: #888;
   font-size: 0.98rem;
   margin-bottom: 24px;
   margin-left: 4px;
 }
+
 .empty-detail {
   color: #888;
   font-size: 1.1rem;
   margin: 60px auto 0;
   text-align: center;
-  background: rgba(255,255,255,0.5);
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 12px;
   padding: 32px;
-  box-shadow: 0 2px 8px rgba(31,38,135,0.04);
+  box-shadow: 0 2px 8px rgba(31, 38, 135, 0.04);
   max-width: 800px;
   width: 90%;
 }
+
 .memo-list-wrapper {
   position: absolute;
   right: 0;
@@ -273,10 +286,11 @@ function handleSearchMemo() {
   margin-right: 0;
   background: #f5f6fa;
   height: 100vh;
-  box-shadow: -2px 0 8px rgba(0,0,0,0.04);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   padding: 32px 0 0 0;
+
   @media (max-width: 768px) {
     width: 100%;
     position: relative;
@@ -289,15 +303,15 @@ function handleSearchMemo() {
   font-size: 1.2rem;
   font-weight: bold;
   color: #6b8ce3;
-  margin-bottom: 18px;
-  padding-left: 32px;
 }
+
 .add-memo-bar {
   display: flex;
   align-items: center;
   padding: 0 16px 12px 16px;
   gap: 8px;
 }
+
 .add-memo-input {
   flex: 1;
   border: none;
@@ -307,8 +321,9 @@ function handleSearchMemo() {
   font-size: 1rem;
   color: #222;
   outline: none;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
+
 .add-memo-btn {
   background: #6b8ce3;
   color: #fff;
@@ -320,9 +335,11 @@ function handleSearchMemo() {
   cursor: pointer;
   transition: background 0.18s;
 }
+
 .add-memo-btn:hover {
   background: #4e6edb;
 }
+
 .memo-list {
   flex: 1 1 auto;
   overflow-y: auto;
@@ -331,6 +348,7 @@ function handleSearchMemo() {
   gap: 10px;
   padding: 0 12px 24px 12px;
 }
+
 .memo-list-item {
   background: #fff;
   border-radius: 6px;
@@ -341,19 +359,30 @@ function handleSearchMemo() {
   margin-bottom: 2px;
   position: relative;
 }
+
 .memo-list-item.selected {
   background: #e3eafd;
   border: 1.5px solid #6b8ce3;
 }
+
 .memo-list-item:hover {
   background: #eceffd;
 }
+
+.memo-list-title-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-right: 16px;
+  padding-left: 18px;
+}
+
 .memo-list-title-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 18px;
-  padding-left: 32px;
   padding-right: 16px;
 }
 
@@ -373,17 +402,28 @@ function handleSearchMemo() {
   font-size: 1rem;
   color: #222;
   outline: none;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
+
 .memo-list-title-text {
   font-weight: bold;
   color: #222;
   font-size: 1.08rem;
 }
+
 .memo-list-date {
-  color: #aaa;
-  font-size: 0.95rem;
+  color: #888;
+  font-size: 0.85rem;
 }
+
+.memo-list-date-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  padding-right: 12px;
+}
+
 .delete-memo-btn {
   background: transparent;
   border: none;
@@ -395,9 +435,11 @@ function handleSearchMemo() {
   border-radius: 3px;
   transition: background 0.18s;
 }
+
 .delete-memo-btn:hover {
   background: #ffeaea;
 }
+
 .memo-list-preview {
   color: #666;
   font-size: 0.98rem;
