@@ -4,38 +4,26 @@
       <h3>菜单</h3>
     </div>
     <div class="sidebar-menu">
-      <div 
-        v-for="item in menuItems"
-        :key="item.id"
-        class="menu-item"
-        @click="selectMenuItem(item)"
-        :class="{ 'active': activeItem === item.id }"
-      >
+      <div v-for="item in menuItems" :key="item.id" class="menu-item" @click="selectMenuItem(item)"
+        :class="{ 'active': activeItem === item.id }">
         {{ item.label }}
       </div>
       <hr v-if="dynamicMenuItems.length" class="sidebar-divider" />
-      <div
-  v-for="(item, idx) in dynamicMenuItems"
-  :key="item.itemType + '-' + item.itemRefId"
-  class="menu-item"
-  :class="{ 'active': activeDynamicIndex === idx }"
->
-  <div @click.stop="item.itemType === 'group' ? toggleGroup(item.itemRefId) : selectDynamicMenuItem(item, idx)">
-    {{ item.itemName }}
-    <span v-if="item.itemType === 'group'" class="dropdown-indicator">{{ expandedGroupId === item.itemRefId ? '▼' : '►' }}</span>
-  </div>
-  <div v-if="item.itemType === 'group' && expandedGroupId === item.itemRefId" class="group-submenu">
-    <div
-      v-for="category in groupCategories[item.itemRefId] || []"
-      :key="category.categoryId"
-      class="submenu-item"
-      @click="() => selectCategory(category.categoryId, idx)"
-      :class="{ 'active': activeDynamicIndex === idx && router.currentRoute.value.params.categoryId === category.categoryId.toString() }"
-    >
-      {{ category.categoryName }}
-    </div>
-  </div>
-</div>
+      <div v-for="(item, idx) in dynamicMenuItems" :key="item.itemType + '-' + item.itemRefId" class="menu-item"
+        :class="{ 'active': activeDynamicIndex === idx }">
+        <div @click.stop="item.itemType === 'group' ? toggleGroup(item.itemRefId) : selectDynamicMenuItem(item, idx)">
+          {{ item.itemName }}
+          <span v-if="item.itemType === 'group'" class="dropdown-indicator">{{ expandedGroupId === item.itemRefId ? '▼'
+            : '►' }}</span>
+        </div>
+        <div v-if="item.itemType === 'group' && expandedGroupId === item.itemRefId" class="group-submenu">
+          <div v-for="category in groupCategories[item.itemRefId] || []" :key="category.categoryId" class="submenu-item"
+            @click="() => selectCategory(category.categoryId, idx)"
+            :class="{ 'active': activeDynamicIndex === idx && router.currentRoute.value.params.categoryId === category.categoryId.toString() }">
+            {{ category.categoryName }}
+          </div>
+        </div>
+      </div>
     </div>
     <div class="sidebar-bottom">
       <button class="sidebar-btn" @click="onCreateList">
@@ -84,7 +72,7 @@ const fetchDynamicMenu = async () => {
 
 const initActiveItem = () => {
   const currentRoute = router.currentRoute.value.name
-  switch(currentRoute) {
+  switch (currentRoute) {
     case 'my-day':
       activeItem.value = 1
       break
@@ -110,7 +98,7 @@ const selectMenuItem = (item) => {
   activeItem.value = item.id
   activeDynamicIndex.value = null
   // 根据菜单项跳转到对应路由
-  switch(item.id) {
+  switch (item.id) {
     case 1:
       router.push({ name: 'my-day' })
       break
@@ -156,28 +144,37 @@ async function onCreateList() {
   } catch (e) { console.error('获取分组分类失败:', e) }
 }
 
+async function onCreateGroup() {
+  const name = window.prompt('请输入新建任务组名称')
+  if (!name || !name.trim()) return
+  try {
+    await saveGroup(name.trim())
+    await fetchDynamicMenu()
+  } catch (e) { console.error('获取分组分类失败:', e) }
+}
+
 function selectCategory(categoryId, idx) {
   activeItem.value = null
   activeDynamicIndex.value = idx
   router.push({ name: 'tasks', params: { categoryId } })
 }
 async function loadGroupCategories(groupId) {
-    try {
-      const res = await listGroupCategory(groupId)
-      if (res && res.code === 0) {
-        groupCategories.value[groupId] = res.data
-      }
-    } catch (e) { console.error('加载分组分类失败:', e) }
-  }
-
-  async function toggleGroup(groupId) {
-    if (expandedGroupId.value === groupId) {
-      expandedGroupId.value = null
-    } else {
-      expandedGroupId.value = groupId
-      await loadGroupCategories(groupId)
+  try {
+    const res = await listGroupCategory(groupId)
+    if (res && res.code === 0) {
+      groupCategories.value[groupId] = res.data
     }
+  } catch (e) { console.error('加载分组分类失败:', e) }
+}
+
+async function toggleGroup(groupId) {
+  if (expandedGroupId.value === groupId) {
+    expandedGroupId.value = null
+  } else {
+    expandedGroupId.value = groupId
+    await loadGroupCategories(groupId)
   }
+}
 </script>
 
 <style scoped>
@@ -208,17 +205,20 @@ async function loadGroupCategories(groupId) {
 }
 
 .group-submenu {
-  padding-left: 24px;
-  border-left: 1px solid #e0e0e0;
-  margin-left: 16px;
-  margin-top: 4px;
-  margin-bottom: 8px;
+  padding-left: 28px;
+  border-left: 2px solid #bbdefb;
+  margin-left: 12px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
 }
 
 .submenu-item {
   padding: 8px 16px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  margin-bottom: 2px;
 }
 
 .submenu-item:hover {
@@ -228,11 +228,16 @@ async function loadGroupCategories(groupId) {
 .submenu-item.active {
   background: #e3f2fd;
   color: #1976d2;
+  font-weight: 500;
+  padding-left: 20px;
+  border-left: 3px solid #1976d2;
 }
 
 .dropdown-indicator {
   margin-left: 8px;
-  font-size: 0.8em;
+  font-size: 0.7em;
+  color: #666;
+  transition: transform 0.2s ease;
 }
 
 .menu-item:hover {
@@ -263,6 +268,7 @@ async function loadGroupCategories(groupId) {
   bottom: 0;
   width: 100%;
 }
+
 .sidebar-btn {
   display: flex;
   align-items: center;
@@ -279,15 +285,18 @@ async function loadGroupCategories(groupId) {
   min-width: 90px;
   white-space: nowrap;
 }
+
 .sidebar-btn:hover {
   background: #ececec;
 }
+
 .plus {
   font-size: 1.3rem;
   margin-right: 4px;
   font-weight: 400;
   line-height: 1;
 }
+
 .btn-text {
   white-space: nowrap;
 }

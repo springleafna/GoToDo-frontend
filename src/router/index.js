@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/Home.vue'
 import MyDayView from '../views/MyDay.vue'
 import ImportantView from '../views/Important.vue'
 import TasksView from '../views/Tasks.vue'
 import MemosView from '../views/Memos.vue'
+import TestView from '../views/Test.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,7 +11,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: MyDayView,
     },
     {
       path: '/my-day',
@@ -33,6 +33,11 @@ const router = createRouter({
       name: 'memos',
       component: MemosView,
     },
+    {
+      path: '/test',
+      name: 'test',
+      component: TestView
+    }
   ],
 })
 
