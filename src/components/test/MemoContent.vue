@@ -195,7 +195,7 @@ defineExpose({
 /* 内容部分 */
 .content textarea {
   width: 100%;
-  min-height: 650px;
+  min-height: 700px;
   padding: 0;
   font-size: 18px;
   color: #333;

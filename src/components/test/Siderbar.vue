@@ -13,48 +13,100 @@
     </nav>
     <hr>
     <nav class="two-level-nav">
-      <div class="main-menu">
-        <span @click="toggleMenu('project')" class="menu-toggle">
-          项目管理
-          <img class="arrow-icon" :src="isProjectOpen ? iconDown : iconUp" alt="arrow">
+      <div v-for="menu in menuItems" :key="menu.itemRefId" class="main-menu">
+        <span @click="toggleMenu(menu.itemRefId)" class="menu-toggle">
+          {{ menu.itemName }}
+          <img class="arrow-icon" :src="isMenuOpen[menu.itemRefId] ? iconUp : iconDown" alt="arrow">
         </span>
-        <div class="sub-menu" v-show="isProjectOpen">
-          <router-link to="/projects/create" class="nav-item">创建项目</router-link>
-          <router-link to="/projects/list" class="nav-item">项目列表</router-link>
-        </div>
-      </div>
-      <div class="main-menu">
-        <span @click="toggleMenu('team')" class="menu-toggle">
-          团队协作
-          <img class="arrow-icon" :src="isTeamOpen ? iconDown : iconUp" alt="arrow">
-        </span>
-        <div class="sub-menu" v-show="isTeamOpen">
-          <router-link to="/team/members" class="nav-item">成员管理</router-link>
-          <router-link to="/team/tasks" class="nav-item">任务分配</router-link>
+        <div class="sub-menu" v-show="isMenuOpen[menu.itemRefId]">
+          <template v-if="menu.itemType === 'group' && menu.children && menu.children.length">
+            <router-link
+              v-for="child in menu.children"
+              :key="child.categoryId"
+              :to="`/category/${child.categoryId}`"
+              class="nav-item"
+            >
+              {{ child.categoryName }}
+            </router-link>
+          </template>
+          <template v-else-if="menu.itemType === 'category'">
+            <router-link :to="`/category/${menu.itemRefId}`" class="nav-item">
+              查看全部
+            </router-link>
+          </template>
         </div>
       </div>
     </nav>
+
+    <!-- 新增按钮区域 -->
+    <div class="sidebar-actions">
+      <button class="action-button">+ 新建分类</button>
+      <button class="action-button">+ 新建分组</button>
+    </div>
 
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { listDisplayItems } from '@/api/displayItem';
+import { listGroupCategory } from '@/api/group';
 import iconUp from '@/assets/icons/icon-up.png';
 import iconDown from '@/assets/icons/icon-down.png';
-// 控制下拉菜单展开状态
-const isProjectOpen = ref(false);
-const isTeamOpen = ref(false);
+
+// 菜单数据和状态
+const menuItems = ref([]);
+const isMenuOpen = ref({});
+const loading = ref(true);
 
 // 切换菜单展开状态
-const toggleMenu = (menu) => {
-  if (menu === 'project') {
-    isProjectOpen.value = !isProjectOpen.value;
-  } else if (menu === 'team') {
-    isTeamOpen.value = !isTeamOpen.value;
+const toggleMenu = (menuId) => {
+  isMenuOpen.value[menuId] = !isMenuOpen.value[menuId];
+};
+
+// 获取菜单数据
+const fetchMenuData = async () => {
+  try {
+    loading.value = true;
+    // 获取一级菜单
+    const displayItemsRes = await listDisplayItems();
+    const displayItems = displayItemsRes.data || [];
+
+    // 对一级菜单进行排序
+    const sortedItems = displayItems.sort((a, b) => a.sortOrder - b.sortOrder);
+
+    // 处理每个菜单项，获取二级菜单
+    for (const item of sortedItems) {
+      // 初始化菜单展开状态
+      isMenuOpen.value[item.itemRefId] = false;
+
+      // 如果是group类型，获取二级分类
+      if (item.itemType === 'group') {
+        try {
+          const categoryRes = await listGroupCategory(item.itemRefId);
+          console.log('ssss', categoryRes.data)
+          item.children = categoryRes.data || [];
+        } catch (err) {
+          console.error(`获取组${item.itemRefId}的分类失败:`, err);
+          message.error(`获取组${item.itemName}的分类失败`);
+          item.children = [];
+        }
+      }
+    }
+
+    menuItems.value = sortedItems;
+  } catch (err) {
+    console.error('获取菜单数据失败:', err);
+    message.error('获取菜单数据失败');
+  } finally {
+    loading.value = false;
   }
 };
-// 侧边栏组件逻辑
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchMenuData();
+});
 </script>
 
 <style scoped>
@@ -64,6 +116,9 @@ const toggleMenu = (menu) => {
   border-right: 1px solid #f0f0f0;
   padding: 20px 0;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
 /* 应用标题 */
@@ -164,5 +219,30 @@ const toggleMenu = (menu) => {
   color: #1890ff;
   border-left-color: #1890ff;
   font-weight: 500;
+}
+
+/* 新增按钮样式 */
+.sidebar-actions {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.action-button {
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 0;
+  font-size: 16px;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.2s;
+}
+
+.action-button:hover {
+  background-color: #096dd9;
 }
 </style>
