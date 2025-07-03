@@ -200,7 +200,6 @@ const filteredMemos = computed(() => {
 .search-input {
   width: 100%;
   padding: 12px 15px;
-  padding-left: 40px;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 16px;
