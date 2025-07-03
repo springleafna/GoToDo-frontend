@@ -6,10 +6,10 @@
 
     <!-- 导航菜单 -->
     <nav class="nav-menu">
-      <a href="#" class="nav-item active">我的一天</a>
-      <a href="#" class="nav-item">重要</a>
-      <a href="#" class="nav-item">任务</a>
-      <a href="#" class="nav-item">便签</a>
+      <router-link to="/my-day" class="nav-item" active-class="active">我的一天</router-link>
+      <router-link to="/important" class="nav-item" active-class="active">重要</router-link>
+      <router-link to="/task" class="nav-item" active-class="active">任务</router-link>
+      <router-link to="/memo" class="nav-item" active-class="active">便签</router-link>
     </nav>
   </div>
 </template>

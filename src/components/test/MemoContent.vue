@@ -31,34 +31,64 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, watch } from 'vue';
 
 export default {
   name: 'MemoContent',
-  setup() {
-    // 初始化便签数据
-    const memo = ref({
-      title: '',
-      content: '',
-      timestamp: '2025-06-27 · 15:30',
-    });
+  props: {
+    memo: {
+      type: Object,
+      default: null
+    },
+    loading: {
+      type: Boolean,
+      default: false
+    }
+  },
+  setup(props) {
+    const localMemo = ref({ title: '', content: '', timestamp: '' });
+
+    watch(() => props.memo,
+      (newVal) => {
+        if (newVal) {
+          localMemo.value = {
+            title: newVal.title || '',
+            content: newVal.content || '',
+            timestamp: newVal.createTime ? new Date(newVal.createTime).toLocaleString('zh-CN', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            }) : ''
+          };
+        } else {
+          localMemo.value = { title: '', content: '', timestamp: '' };
+        }
+      },
+      { immediate: true }
+    );
 
     // 计算字数
-    const characterCount = computed(() => {
-      return memo.value.content.length;
-    });
+    const characterCount = ref(0);
 
-    // 更新字数
     const updateCharacterCount = () => {
-      characterCount.value = memo.value.content.length;
+      characterCount.value = localMemo.value.content.length;
     };
+
+    watch(() => localMemo.value.content,
+      () => {
+        updateCharacterCount();
+      },
+      { immediate: true }
+    );
 
     return {
-      memo,
+      memo: localMemo,
       characterCount,
-      updateCharacterCount,
+      updateCharacterCount
     };
-  },
+  }
 };
 </script>
 
@@ -67,10 +97,19 @@ export default {
 .memo-container {
   font-family: Arial, sans-serif;
   background-color: #fff;
-
   padding: 20px;
-
   flex-direction: column;
+  min-height: 100vh;
+}
+
+.loading,
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: #666;
+  font-size: 16px;
 }
 
 /* 标题部分 */

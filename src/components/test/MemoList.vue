@@ -7,48 +7,73 @@
         placeholder="搜索便签..."
         class="search-input"
       />
-      <i class="search-icon"></i>
+      <button class="create-btn" @click="handleCreateMemo">+</button>
     </div>
 
     <!-- 便签列表 -->
     <div class="memo-items">
       <div
         v-for="memo in filteredMemos"
-        :key="memo.id"
+        :key="memo.memoId"
         class="memo-item"
+        @click="handleMemoClick(memo.memoId)"
       >
-        <h3 class="memo-title">{{ memo.title }}</h3>
-        <p class="memo-content">{{ memo.content }}</p>
-        <span class="memo-timestamp">{{ memo.timestamp }}</span>
+        <h3 class="memo-title">{{ memo.title || '无标题...' }}</h3>
+        <p class="memo-content">{{ memo.content || '无内容...' }}</p>
+        <span class="memo-timestamp">{{ formatDate(memo.createTime) }}</span>
+      </div>
+      <div v-if="filteredMemos.length === 0" class="empty-message">
+        您还没有便签哦~请点击创建按钮进行添加
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, defineEmits } from 'vue';
+import {
+  getMemoList,
+  getMemoDetail
+} from '@/api/memo'
 
-// 模拟便签数据
-const memos = ref([
-  {
-    id: 1,
-    title: '# 产品需求分析',
-    content: '整理本季度产品迭代计划，包括核心功能优化...',
-    timestamp: '2025-06-27 | 14:20'
-  },
-  {
-    id: 2,
-    title: '# 周会记录',
-    content: '1. 上周工作进展回顾 2. 本周重点任务...',
-    timestamp: '2025-06-27 | 15:30'
-  },
-  {
-    id: 3,
-    title: '# 临时灵感',
-    content: '新功能构思：可以考虑添加协作编辑功能...',
-    timestamp: '2025-06-27 | 16:45'
+// 新增：定义创建便签事件
+const emit = defineEmits(['select-memo', 'create-memo']);
+
+// 新增：创建便签按钮点击事件
+const handleCreateMemo = () => {
+  emit('create-memo');
+};
+
+// 格式化时间
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).replace(/\//g, '-');
+}
+
+// 便签数据
+const memos = ref([]);
+
+const handleMemoClick = (memoId) => {
+  emit('select-memo', memoId);
+};
+
+onMounted(async () => {
+  try {
+    const response = await getMemoList();
+    memos.value = response.data || [];
+  } catch (error) {
+    console.error('获取便签列表失败:', error);
+    memos.value = [];
   }
-]);
+});
 
 // 搜索关键词
 const searchKeyword = ref('');
@@ -66,8 +91,7 @@ const filteredMemos = computed(() => {
 
 <style scoped>
 .memo-list-container {
-  max-width: 800px;
-  min-width: 400px;
+  width: 400px;
   margin: 0 auto;
   padding: 20px;
   background-color: #f9f9f9;
@@ -77,6 +101,28 @@ const filteredMemos = computed(() => {
 .search-box {
   position: relative;
   margin-bottom: 30px;
+  display: flex; /* 新增：使用flex布局 */
+  gap: 10px; /* 新增：添加间距 */
+  align-items: center; /* 新增：垂直居中对齐 */
+}
+
+/* 新增：创建按钮样式 */
+.create-btn {
+  background-color: #007bff;
+  width: 50px;
+  height: 40px;
+  border-radius: 8px;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.create-btn:hover {
+  background-color: #0056b3;
 }
 
 .search-input {
@@ -116,6 +162,9 @@ const filteredMemos = computed(() => {
   color: #333;
   font-size: 18px;
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .memo-content {
@@ -125,7 +174,9 @@ const filteredMemos = computed(() => {
   line-height: 1.5;
   display: -webkit-box;
   -webkit-box-orient: vertical;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .memo-timestamp {
@@ -133,5 +184,15 @@ const filteredMemos = computed(() => {
   text-align: right;
   color: #999;
   font-size: 12px;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 </style>

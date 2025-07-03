@@ -16,6 +16,20 @@ export const saveMemo = async () => {
 }
 
 /**
+ * 创建便签，当用户离开界面且内容不为空时触发便签内容同步到数据库
+ */
+export const addMemo = async (memoData) => {
+  try {
+    const res = await request.post('/memo/add', memoData)
+    return res
+  } catch (err) {
+    console.error('创建便签失败:', err)
+    message.error('创建便签失败')
+    throw err
+  }
+}
+
+/**
  * 获取所有非空的便签列表
  */
 export const getMemoList = async () => {
