@@ -67,8 +67,10 @@ const filteredMemos = computed(() => {
 <style scoped>
 .memo-list-container {
   max-width: 800px;
+  min-width: 400px;
   margin: 0 auto;
   padding: 20px;
+  background-color: #f9f9f9;
 }
 
 /* 搜索框样式 */
@@ -79,27 +81,14 @@ const filteredMemos = computed(() => {
 
 .search-input {
   width: 100%;
-  padding: 12px 15px 12px 40px;
+  padding: 12px 15px;
+  padding-left: 40px;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 16px;
   outline: none;
   transition: border-color 0.3s;
-}
-
-.search-input:focus {
-  border-color: #666;
-}
-
-.search-icon {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23999"><path d="M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.35-4.35</path></svg>');
-  background-size: cover;
+  box-sizing: border-box;
 }
 
 /* 便签列表样式 */
@@ -135,7 +124,6 @@ const filteredMemos = computed(() => {
   font-size: 14px;
   line-height: 1.5;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

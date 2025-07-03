@@ -1,12 +1,11 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import Sidebar from './components/Sidebar.vue'
+import Siderbar from './components/test/Siderbar.vue';
 
 </script>
 
 <template>
   <div class="app-container">
-    <Sidebar />
+    <Siderbar />
     <div class="main-content">
       <RouterView />
     </div>
@@ -16,7 +15,8 @@ import Sidebar from './components/Sidebar.vue'
 <style scoped>
 .app-container {
   display: flex;
-  height: 100vh;
+
+  background-color: rgb(245, 245, 245);
 }
 .main-content {
   flex: 1;

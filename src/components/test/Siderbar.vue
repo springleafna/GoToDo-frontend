@@ -21,8 +21,7 @@
 <style scoped>
 .sidebar-container {
   width: 240px;
-  height: 100vh;
-  background-color: #ffffff;
+  background-color: #f9f9f9;
   border-right: 1px solid #f0f0f0;
   padding: 20px 0;
   box-sizing: border-box;
@@ -55,7 +54,7 @@
   padding: 12px 24px;
   color: #666666;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 16px;
   transition: all 0.2s ease;
   border-left: 3px solid transparent;
 }

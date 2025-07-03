@@ -1,8 +1,9 @@
 <template>
   <div class="sidebar">
     <div class="sidebar-header">
-      <h3>菜单</h3>
+      <h3>GoToDo</h3>
     </div>
+    <hr class="sidebar-divider" />
     <div class="sidebar-menu">
       <div v-for="item in menuItems" :key="item.id" class="menu-item" @click="selectMenuItem(item)"
         :class="{ 'active': activeItem === item.id }">
@@ -181,8 +182,6 @@ async function toggleGroup(groupId) {
 .sidebar {
   width: 250px;
   height: 100vh;
-  background: #f8f9fa;
-  border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -190,18 +189,37 @@ async function toggleGroup(groupId) {
 }
 
 .sidebar-header {
-  padding: 16px;
-  border-bottom: 1px solid #e0e0e0;
+  margin-left: 60px;
 }
 
+/* 菜单区域样式 */
 .sidebar-menu {
-  flex: 1 1 auto;
+
+  padding: 10px;
 }
 
+/* 菜单项样式 */
 .menu-item {
   padding: 12px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 8px; /* 增加菜单项之间的间距 */
+  border-radius: 8px; /* 圆角效果 */
+}
+
+/* 菜单项激活状态 */
+.menu-item.active {
+  background-color: #e0e0e0; /* 激活时的背景色 */
+}
+
+/* 忽略图标的左侧缩进效果 */
+.menu-item::before {
+  content: "";
+  display: inline-block;
+  width: 24px; /* 图标宽度 */
+  margin-right: 8px; /* 图标与文字的间距 */
 }
 
 .group-submenu {

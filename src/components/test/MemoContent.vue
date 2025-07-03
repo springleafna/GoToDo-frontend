@@ -67,10 +67,10 @@ export default {
 .memo-container {
   font-family: Arial, sans-serif;
   background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+  flex-direction: column;
 }
 
 /* 标题部分 */
@@ -105,14 +105,16 @@ export default {
 /* 内容部分 */
 .content textarea {
   width: 100%;
-  min-height: 300px;
+  min-height: 650px;
   padding: 0;
-  font-size: 16px;
+  font-size: 18px;
+  color: #333;
   font-family: Arial, sans-serif;
   border: none;
   resize: vertical;
   outline: none;
   line-height: 1.6;
+  margin-top: 10px;
 }
 
 /* 底部信息 */

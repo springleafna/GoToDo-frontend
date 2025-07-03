@@ -3,7 +3,7 @@ import MyDayView from '../views/MyDay.vue'
 import ImportantView from '../views/Important.vue'
 import TasksView from '../views/Tasks.vue'
 import MemosView from '../views/Memos.vue'
-import TestView from '../views/Test.vue'
+import Memo from '@/views/Memo.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,9 +34,9 @@ const router = createRouter({
       component: MemosView,
     },
     {
-      path: '/test',
-      name: 'test',
-      component: TestView
+      path: '/memo',
+      name: 'memo',
+      component: Memo
     }
   ],
 })
