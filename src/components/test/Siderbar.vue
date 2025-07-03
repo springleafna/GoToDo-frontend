@@ -11,10 +11,49 @@
       <router-link to="/task" class="nav-item" active-class="active">任务</router-link>
       <router-link to="/memo" class="nav-item" active-class="active">便签</router-link>
     </nav>
+    <hr>
+    <nav class="two-level-nav">
+      <div class="main-menu">
+        <span @click="toggleMenu('project')" class="menu-toggle">
+          项目管理
+          <img class="arrow-icon" :src="isProjectOpen ? iconDown : iconUp" alt="arrow">
+        </span>
+        <div class="sub-menu" v-show="isProjectOpen">
+          <router-link to="/projects/create" class="nav-item">创建项目</router-link>
+          <router-link to="/projects/list" class="nav-item">项目列表</router-link>
+        </div>
+      </div>
+      <div class="main-menu">
+        <span @click="toggleMenu('team')" class="menu-toggle">
+          团队协作
+          <img class="arrow-icon" :src="isTeamOpen ? iconDown : iconUp" alt="arrow">
+        </span>
+        <div class="sub-menu" v-show="isTeamOpen">
+          <router-link to="/team/members" class="nav-item">成员管理</router-link>
+          <router-link to="/team/tasks" class="nav-item">任务分配</router-link>
+        </div>
+      </div>
+    </nav>
+
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
+import iconUp from '@/assets/icons/icon-up.png';
+import iconDown from '@/assets/icons/icon-down.png';
+// 控制下拉菜单展开状态
+const isProjectOpen = ref(false);
+const isTeamOpen = ref(false);
+
+// 切换菜单展开状态
+const toggleMenu = (menu) => {
+  if (menu === 'project') {
+    isProjectOpen.value = !isProjectOpen.value;
+  } else if (menu === 'team') {
+    isTeamOpen.value = !isTeamOpen.value;
+  }
+};
 // 侧边栏组件逻辑
 </script>
 
@@ -61,6 +100,63 @@
 
 .nav-item:hover {
   background-color: #f5f5f5;
+}
+
+/* 两级菜单样式 */
+.two-level-nav {
+  padding: 10px 0;
+}
+
+.main-menu {
+  margin-bottom: 8px;
+}
+
+.menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666666;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.menu-toggle:hover {
+  background-color: #f5f5f5;
+}
+
+.arrow-icon {
+  width: 10px;
+  vertical-align: middle;
+  transition: transform 0.2s ease;
+}
+
+.sub-menu {
+  background-color: #f9f9f9;
+  border-left: 3px solid transparent;
+  margin-left: 0;
+  padding-left: 0;
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.sub-menu .nav-item {
+  padding-left: 24px;
+  font-size: 16px;
+}
+
+.sub-menu .nav-item:hover {
+  border-left-color: #42b983;
+}
+
+.nav-item.active {
+  color: #42b983;
+  border-left-color: #42b983;
+  font-weight: 500;
 }
 
 .nav-item.active {
