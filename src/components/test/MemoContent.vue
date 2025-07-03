@@ -3,17 +3,17 @@
   <!-- 标题部分 -->
   <div class="header">
     <input 
-      v-model="memo.title"
+      v-model="localMemo.title"
       placeholder="输入标题..."
       class="title-input"
     />
-    <span class="timestamp">{{ memo.timestamp }}</span>
+    <span class="timestamp">{{ formatDate(localMemo.updateTime)  }}</span>
   </div>
 
   <!-- 内容部分 -->
   <div class="content">
     <textarea
-      v-model="memo.content"
+      v-model="localMemo.content"
       placeholder="开始记录..."
       @input="updateCharacterCount"
     ></textarea>
@@ -21,7 +21,7 @@
 
     <!-- 底部信息 -->
     <div class="footer">
-      <span>字数：{{ characterCount }}</span>
+      <span>字数：{{ charCount }}</span>
       <span class="save-status">
         <i class="icon-check"></i>
         已保存
@@ -30,66 +30,117 @@
   </div>
 </template>
 
-<script>
-import { ref, watch } from 'vue';
+<script setup>
+import { ref, watch, onBeforeUnmount } from 'vue';
+import { addMemo, updateMemo } from '@/api/memo';
 
-export default {
-  name: 'MemoContent',
-  props: {
-    memo: {
-      type: Object,
-      default: null
-    },
-    loading: {
-      type: Boolean,
-      default: false
-    }
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: '2-digit',
+  }).replace(/\//g, '-');
+}
+
+const props = defineProps({
+  memo: {
+    type: Object,
+    default: () => ({})
   },
-  setup(props) {
-    const localMemo = ref({ title: '', content: '', timestamp: '' });
+  loading: {
+    type: Boolean,
+    default: false
+  }
+});
 
-    watch(() => props.memo,
-      (newVal) => {
-        if (newVal) {
-          localMemo.value = {
-            title: newVal.title || '',
-            content: newVal.content || '',
-            timestamp: newVal.createTime ? new Date(newVal.createTime).toLocaleString('zh-CN', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            }) : ''
-          };
-        } else {
-          localMemo.value = { title: '', content: '', timestamp: '' };
-        }
-      },
-      { immediate: true }
-    );
+// 存储原始memo数据用于比较
+const originalMemo = ref({ ...props.memo });
+const localMemo = ref({ ...props.memo });
+const charCount = ref(0);
 
-    // 计算字数
-    const characterCount = ref(0);
+watch(() => props.memo,
+  (newVal) => {
+    originalMemo.value = { ...newVal };
+    localMemo.value = { ...newVal };
+    updateCharCount();
+  },
+  { deep: true }
+);
 
-    const updateCharacterCount = () => {
-      characterCount.value = localMemo.value.content.length;
-    };
+watch(() => localMemo.value.content,
+  () => {
+    updateCharCount();
+  }
+);
 
-    watch(() => localMemo.value.content,
-      () => {
-        updateCharacterCount();
-      },
-      { immediate: true }
-    );
+const updateCharCount = () => {
+  charCount.value = localMemo.value.content ? localMemo.value.content.length : 0;
+};
 
-    return {
-      memo: localMemo,
-      characterCount,
-      updateCharacterCount
-    };
+// 页面离开时保存/更新便签
+const saveOnLeave = async () => {
+  // 检查memoId是否存在
+  if (localMemo.value.memoId) {
+    // 存在memoId - 更新场景：检查标题或内容是否有变化
+    const titleChanged = localMemo.value.title !== originalMemo.value.title;
+    const contentChanged = localMemo.value.content !== originalMemo.value.content;
+
+    if (titleChanged || contentChanged) {
+      try {
+        console.log('执行更新')
+        await updateMemo({
+          memoId: localMemo.value.memoId,
+          title: localMemo.value.title,
+          content: localMemo.value.content
+        });
+        console.log('便签已更新');
+      } catch (error) {
+        console.error('更新便签失败:', error);
+      }
+    }
+  } else {
+    // 不存在memoId - 新增场景：检查标题和内容是否都为空
+    const titleEmpty = !localMemo.value.title?.trim();
+    const contentEmpty = !localMemo.value.content?.trim();
+
+    if (!titleEmpty || !contentEmpty) {
+      try {
+        await addMemo({
+          title: localMemo.value.title || '',
+          content: localMemo.value.content || ''
+        });
+        console.log('新便签已保存');
+      } catch (error) {
+        console.error('保存新便签失败:', error);
+      }
+    }
   }
 };
+
+// 组件卸载时保存
+onBeforeUnmount(saveOnLeave);
+
+// 页面关闭/刷新时保存
+const handleBeforeUnload = async (e) => {
+  await saveOnLeave();
+  e.returnValue = '您有未保存的更改，确定要离开吗？';
+};
+
+window.addEventListener('beforeunload', handleBeforeUnload);
+
+// 组件卸载时移除事件监听
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload);
+});
+
+defineExpose({
+  saveOnLeave
+});
 </script>
 
 <style scoped>

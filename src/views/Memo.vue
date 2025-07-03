@@ -1,7 +1,7 @@
 <template>
   <div class="memo-container">
-    <memo-content class="memo-content" :memo="selectedMemo" :loading="loading" />
-    <memo-list class="memo-list" @select-memo="handleSelectMemo" />
+    <memo-content ref="memoContentRef" class="memo-content" :memo="selectedMemo" :loading="loading" />
+    <memo-list ref="memoListRef" class="memo-list" @select-memo="handleSelectMemo" @create-memo="handleCreateMemo" />
   </div>
 </template>
 
@@ -11,10 +11,20 @@ import { getMemoDetail } from '@/api/memo';
 import MemoContent from '@/components/test/MemoContent.vue';
 import MemoList from '@/components/test/MemoList.vue';
 
+const memoContentRef = ref(null);
+const memoListRef = ref(null);
 const selectedMemo = ref(null);
 const loading = ref(false);
 
 const handleSelectMemo = async (memoId) => {
+  // 切换便签前保存当前内容
+  if (memoContentRef.value) {
+    await memoContentRef.value.saveOnLeave();
+    // 刷新便签列表
+    if (memoListRef.value) {
+      memoListRef.value.refreshMemos();
+    }
+  }
   loading.value = true;
   try {
     const response = await getMemoDetail(memoId);
@@ -24,6 +34,18 @@ const handleSelectMemo = async (memoId) => {
   } finally {
     loading.value = false;
   }
+};
+
+const handleCreateMemo = async () => {
+  // 创建新便签前保存当前内容
+  if (memoContentRef.value) {
+    await memoContentRef.value.saveOnLeave();
+    // 刷新便签列表
+    if (memoListRef.value) {
+      memoListRef.value.refreshMemos();
+    }
+  }
+  selectedMemo.value = {};
 };
 </script>
 

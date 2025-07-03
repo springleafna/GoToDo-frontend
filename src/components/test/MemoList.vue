@@ -20,7 +20,7 @@
       >
         <h3 class="memo-title">{{ memo.title || '无标题...' }}</h3>
         <p class="memo-content">{{ memo.content || '无内容...' }}</p>
-        <span class="memo-timestamp">{{ formatDate(memo.createTime) }}</span>
+        <span class="memo-timestamp">{{ formatDate(memo.updateTime) }}</span>
       </div>
       <div v-if="filteredMemos.length === 0" class="empty-message">
         您还没有便签哦~请点击创建按钮进行添加
@@ -31,10 +31,7 @@
 
 <script setup>
 import { ref, computed, onMounted, defineEmits } from 'vue';
-import {
-  getMemoList,
-  getMemoDetail
-} from '@/api/memo'
+import { getMemoList } from '@/api/memo'
 
 // 新增：定义创建便签事件
 const emit = defineEmits(['select-memo', 'create-memo']);
@@ -65,7 +62,7 @@ const handleMemoClick = (memoId) => {
   emit('select-memo', memoId);
 };
 
-onMounted(async () => {
+const loadMemos = async () => {
   try {
     const response = await getMemoList();
     memos.value = response.data || [];
@@ -73,6 +70,16 @@ onMounted(async () => {
     console.error('获取便签列表失败:', error);
     memos.value = [];
   }
+};
+
+onMounted(loadMemos);
+
+const refreshMemos = () => {
+  loadMemos();
+};
+
+defineExpose({
+  refreshMemos
 });
 
 // 搜索关键词
@@ -95,15 +102,20 @@ const filteredMemos = computed(() => {
   margin: 0 auto;
   padding: 20px;
   background-color: #f9f9f9;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 /* 搜索框样式 */
 .search-box {
   position: relative;
   margin-bottom: 30px;
-  display: flex; /* 新增：使用flex布局 */
-  gap: 10px; /* 新增：添加间距 */
-  align-items: center; /* 新增：垂直居中对齐 */
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 /* 新增：创建按钮样式 */
@@ -142,6 +154,9 @@ const filteredMemos = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 5px;
 }
 
 .memo-item {
