@@ -63,6 +63,23 @@ export const updateMemo = async (memoData) => {
 }
 
 /**
+ * 更新便签内容（自动保存或手动保存时调用）
+ * @param {Object} memoData - MemoUpdateDTO 参数对象
+ * @param {Long} memoData.memoId - 便签ID
+ * @param {boolean} memoData.pinned - 是否置顶 (false:否 true:是)
+ */
+export const updatePinnedMemo = async (memoData) => {
+  try {
+    const res = await request.put('/memo/updatePinned', memoData)
+    return res
+  } catch (err) {
+    console.error('更新便签置顶状态失败:', err)
+    message.error('更新便签置顶状态失败')
+    throw err
+  }
+}
+
+/**
  * 删除便签
  * @param {Long} memoId - 便签ID
  */
