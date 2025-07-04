@@ -5,18 +5,53 @@
       <div v-if="tasks.length === 0" class="empty-tasks">
         您还没有添加任务哦~
       </div>
-      <div
-        v-else
-        v-for="task in tasks"
-        :key="task.taskId"
-        class="task-item"
-        :class="{ selected: task.taskId === selectedTaskId, completed: task.completed === 1 }"
-        @click="$emit('select-task', task.taskId)"
-      >
-        <input type="checkbox" :checked="task.completed === 1" @click.stop="handleToggleComplete(task)">
-        <span class="task-title">{{ task.title }}</span>
-        <button class="delete-btn" @click.stop="handleDeleteTask(task)">删除</button>
-      </div>
+      <template v-else>
+        <!-- 未完成任务 -->
+        <div class="task-section">
+          <h3 class="section-title">进行中</h3>
+          <div
+            v-for="task in incompleteTasks"
+            :key="task.taskId"
+            class="task-item"
+            :class="{ 
+              selected: task.taskId === selectedTaskId, 
+              completed: Boolean(task.completed) 
+            }"
+            @click="$emit('select-task', task.taskId)"
+          >
+            <input 
+              type="checkbox" 
+              :checked="Boolean(task.completed)" 
+              @click.stop="handleToggleComplete(task)"
+            >
+            <span class="task-title">{{ task.title }}</span>
+            <button class="delete-btn" @click.stop="handleDeleteTask(task)">删除</button>
+          </div>
+        </div>
+        
+        <!-- 已完成任务 -->
+        <div v-if="completedTasks.length > 0" class="task-section completed-section">
+          <h3 class="section-title">已完成</h3>
+          <div
+            v-for="task in completedTasks"
+            :key="task.taskId"
+            class="task-item"
+            :class="{ 
+              selected: task.taskId === selectedTaskId, 
+              completed: Boolean(task.completed) 
+            }"
+            @click="$emit('select-task', task.taskId)"
+          >
+            <input 
+              type="checkbox" 
+              :checked="Boolean(task.completed)" 
+              @click.stop="handleToggleComplete(task)"
+            >
+            <span class="task-title">{{ task.title }}</span>
+            <button class="delete-btn" @click.stop="handleDeleteTask(task)">删除</button>
+          </div>
+        </div>
+      </template>
     </div>
     <div class="add-task-bar">
       <span class="plus">＋</span>
@@ -31,14 +66,30 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { saveTask, completedTask, deleteTask } from '@/api/task'
 
 const props = defineProps({
-  selectedTaskId: Number,
-  tasks: { type: Array, required: true }
+  selectedTaskId: {
+    type: Number,
+    default: null
+  },
+  tasks: {
+    type: Array,
+    required: true,
+    default: () => []
+  }
 })
+
+const incompleteTasks = computed(() => 
+  props.tasks.filter(task => !Boolean(task.completed))
+)
+
+const completedTasks = computed(() => 
+  props.tasks.filter(task => Boolean(task.completed))
+)
+
 const emit = defineEmits(['add-task', 'task-added', 'select-task', 'update-task', 'task-deleted', 'refresh-tasks'])
 const route = useRoute()
 const newTaskTitle = ref('')
@@ -61,7 +112,7 @@ async function handleAddTask() {
 
 async function handleToggleComplete(task) {
   try {
-    const newCompleted = task.completed === 1 ? 0 : 1
+    const newCompleted = Boolean(task.completed) ? 0 : 1
     await completedTask(task.taskId, newCompleted)
     emit('update-task', { ...task, completed: newCompleted })
   } catch (err) {
@@ -117,7 +168,7 @@ async function handleDeleteTask(task) {
   cursor: pointer;
   transition: background 0.18s;
   border: 1px solid transparent;
-  margin: 0 32px 0 0;
+  margin: 0 32px 12px 0;
 }
 .task-item.selected {
   background: #e3eafd;
@@ -191,5 +242,27 @@ async function handleDeleteTask(task) {
   background-color: #f9f9f9;
   border-radius: 8px;
   margin: 0 32px 0 0;
+}
+.task-section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  color: #888;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  padding-left: 8px;
+}
+
+.completed-section {
+  opacity: 0.8;
+}
+
+.completed-section .task-item {
+  background: #f0f0f0;
+}
+
+.task-section .task-item:last-child {
+  margin-bottom: 0;
 }
 </style>
