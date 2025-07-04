@@ -1,5 +1,5 @@
 <script setup>
-import Siderbar from './components/test/Siderbar.vue';
+import Siderbar from './components/Siderbar.vue';
 
 </script>
 

@@ -8,8 +8,8 @@
 <script setup>
 import { ref } from 'vue'
 import { getMemoDetail } from '@/api/memo';
-import MemoContent from '@/components/test/MemoContent.vue';
-import MemoList from '@/components/test/MemoList.vue';
+import MemoContent from '@/components/MemoContent.vue';
+import MemoList from '@/components/MemoList.vue';
 
 const memoContentRef = ref(null);
 const memoListRef = ref(null);

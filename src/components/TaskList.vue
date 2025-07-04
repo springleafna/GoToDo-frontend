@@ -6,9 +6,10 @@
         v-for="task in tasks"
         :key="task.taskId"
         class="task-item"
-        :class="{ selected: task.taskId === selectedTaskId }"
+        :class="{ selected: task.taskId === selectedTaskId, completed: task.completed === 1 }"
         @click="$emit('select-task', task.taskId)"
       >
+        <input type="checkbox" :checked="task.completed === 1" @click.stop="handleToggleComplete(task)">
         <span class="task-title">{{ task.title }}</span>
       </div>
     </div>
@@ -27,33 +28,15 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { listTaskByCategoryId, saveTask } from '@/api/task'
+import { saveTask, completedTask } from '@/api/task'
 
 const props = defineProps({
-  selectedTaskId: Number
+  selectedTaskId: Number,
+  tasks: { type: Array, required: true }
 })
-const emit = defineEmits(['add-task', 'select-task'])
+const emit = defineEmits(['add-task', 'select-task', 'update-task'])
 const route = useRoute()
-const tasks = ref([])
 const newTaskTitle = ref('')
-
-async function fetchTasks(categoryId) {
-  if (!categoryId) return
-  const res = await listTaskByCategoryId(categoryId)
-  if (Array.isArray(res.data)) {
-    tasks.value = res.data.slice().sort((a, b) => a.sortOrder - b.sortOrder)
-  } else {
-    tasks.value = []
-  }
-}
-
-onMounted(() => {
-  fetchTasks(route.params.categoryId)
-})
-
-watch(() => route.params.categoryId, (newId) => {
-  fetchTasks(newId)
-})
 
 async function handleAddTask() {
   const title = newTaskTitle.value.trim()
@@ -65,9 +48,19 @@ async function handleAddTask() {
       categoryId
     })
     newTaskTitle.value = ''
-    await fetchTasks(categoryId)
+    emit('task-added')
   } catch (err) {
     console.error('添加任务失败:', err)
+  }
+}
+
+async function handleToggleComplete(task) {
+  try {
+    const newCompleted = task.completed === 1 ? 0 : 1
+    await completedTask(task.taskId, newCompleted)
+    emit('update-task', { ...task, completed: newCompleted })
+  } catch (err) {
+    console.error('更新任务状态失败:', err)
   }
 }
 </script>
@@ -118,6 +111,17 @@ async function handleAddTask() {
 .task-title {
   flex: 1;
   color: #222;
+}
+
+.task-item.completed .task-title {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.task-item input[type="checkbox"] {
+  margin-right: 12px;
+  width: 16px;
+  height: 16px;
 }
 .add-task-bar {
   display: flex;

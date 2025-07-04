@@ -9,6 +9,8 @@
         :selectedTaskId="selectedTaskId"
         @add-task="addTask"
         @select-task="selectTask"
+        @update-task="handleUpdateTask"
+        @task-added="fetchTasks"
       />
     </div>
     <transition name="slide-detail">
@@ -32,12 +34,7 @@ const route = useRoute()
 
 watch(
   () => route.params.categoryId,
-  async (categoryId) => {
-    if (categoryId) {
-      const res = await listTaskByCategoryId(categoryId)
-      tasks.value = res.data || []
-    }
-  },
+  () => fetchTasks(),
   { immediate: true }
 )
 
@@ -54,6 +51,20 @@ function selectTask(id) {
 }
 function closeDetail() {
   selectedTaskId.value = null
+}
+
+function handleUpdateTask(updatedTask) {
+  const index = tasks.value.findIndex(t => t.taskId === updatedTask.taskId)
+  if (index !== -1) {
+    tasks.value.splice(index, 1, updatedTask)
+  }
+}
+
+async function fetchTasks() {
+  if (route.params.categoryId) {
+    const res = await listTaskByCategoryId(route.params.categoryId)
+    tasks.value = res.data || []
+  }
 }
 </script>
 

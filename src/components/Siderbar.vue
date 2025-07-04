@@ -23,14 +23,14 @@
             <router-link
               v-for="child in menu.children"
               :key="child.categoryId"
-              :to="`/category/${child.categoryId}`"
+              :to="`/tasks/${child.categoryId}`"
               class="nav-item"
             >
               {{ child.categoryName }}
             </router-link>
           </template>
           <template v-else-if="menu.itemType === 'category'">
-            <router-link :to="`/category/${menu.itemRefId}`" class="nav-item">
+            <router-link :to="`/tasks/${menu.itemRefId}`" class="nav-item">
               查看全部
             </router-link>
           </template>
@@ -84,7 +84,6 @@ const fetchMenuData = async () => {
       if (item.itemType === 'group') {
         try {
           const categoryRes = await listGroupCategory(item.itemRefId);
-          console.log('ssss', categoryRes.data)
           item.children = categoryRes.data || [];
         } catch (err) {
           console.error(`获取组${item.itemRefId}的分类失败:`, err);
@@ -194,7 +193,7 @@ onMounted(() => {
   background-color: #f9f9f9;
   border-left: 3px solid transparent;
   margin-left: 0;
-  padding-left: 0;
+  padding-left: 20px;
   box-shadow: none;
   transition: all 0.2s ease;
 }
