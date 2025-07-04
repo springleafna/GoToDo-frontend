@@ -2,7 +2,11 @@
   <div class="task-list">
     <h2 class="list-title">任务列表</h2>
     <div class="task-items">
+      <div v-if="tasks.length === 0" class="empty-tasks">
+        您还没有添加任务哦~
+      </div>
       <div
+        v-else
         v-for="task in tasks"
         :key="task.taskId"
         class="task-item"
@@ -11,6 +15,7 @@
       >
         <input type="checkbox" :checked="task.completed === 1" @click.stop="handleToggleComplete(task)">
         <span class="task-title">{{ task.title }}</span>
+        <button class="delete-btn" @click.stop="handleDeleteTask(task)">删除</button>
       </div>
     </div>
     <div class="add-task-bar">
@@ -28,13 +33,13 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { saveTask, completedTask } from '@/api/task'
+import { saveTask, completedTask, deleteTask } from '@/api/task'
 
 const props = defineProps({
   selectedTaskId: Number,
   tasks: { type: Array, required: true }
 })
-const emit = defineEmits(['add-task', 'select-task', 'update-task'])
+const emit = defineEmits(['add-task', 'task-added', 'select-task', 'update-task', 'task-deleted', 'refresh-tasks'])
 const route = useRoute()
 const newTaskTitle = ref('')
 
@@ -61,6 +66,19 @@ async function handleToggleComplete(task) {
     emit('update-task', { ...task, completed: newCompleted })
   } catch (err) {
     console.error('更新任务状态失败:', err)
+  }
+}
+
+async function handleDeleteTask(task) {
+  if (confirm('确定要删除这个任务吗？')) {
+    try {
+      await deleteTask(task.taskId);
+      emit('task-deleted', task.taskId);
+      // 删除成功后通知父组件刷新任务列表
+      emit('refresh-tasks');
+    } catch (err) {
+      console.error('删除任务失败:', err);
+    }
   }
 }
 </script>
@@ -113,6 +131,20 @@ async function handleToggleComplete(task) {
   color: #222;
 }
 
+.delete-btn {
+  color: #ff4d4f;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 0.9rem;
+  margin-left: auto;
+}
+
+.delete-btn:hover {
+  background-color: #fff0f0;
+  border-radius: 4px;
+}
 .task-item.completed .task-title {
   text-decoration: line-through;
   color: #888;
@@ -148,5 +180,16 @@ async function handleToggleComplete(task) {
   font-size: 1.1rem;
   flex: 1;
   color: #222;
+}
+.empty-tasks {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #888;
+  font-size: 1.2rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 0 32px 0 0;
 }
 </style>

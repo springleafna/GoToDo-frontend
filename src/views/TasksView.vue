@@ -4,12 +4,10 @@
       class="task-list-wrapper"
       :class="{ 'shrink': selectedTaskId }"
     >
-      <TaskList
+      <TaskList @refresh-tasks="fetchTasks"
         :tasks="tasks"
         :selectedTaskId="selectedTaskId"
-        @add-task="addTask"
         @select-task="selectTask"
-        @update-task="handleUpdateTask"
         @task-added="fetchTasks"
       />
     </div>
@@ -40,12 +38,7 @@ watch(
 
 const selectedTask = computed(() => tasks.value.find(t => t.taskId === selectedTaskId.value))
 
-function addTask(title) {
-  if (!title.trim()) return
-  const id = Date.now()
-  tasks.value.push({ id, title, detail: '', createdAt: new Date().toISOString().slice(0, 10) })
-  selectedTaskId.value = id
-}
+
 function selectTask(id) {
   selectedTaskId.value = id
 }
@@ -53,16 +46,14 @@ function closeDetail() {
   selectedTaskId.value = null
 }
 
-function handleUpdateTask(updatedTask) {
-  const index = tasks.value.findIndex(t => t.taskId === updatedTask.taskId)
-  if (index !== -1) {
-    tasks.value.splice(index, 1, updatedTask)
-  }
-}
+
 
 async function fetchTasks() {
   if (route.params.categoryId) {
     const res = await listTaskByCategoryId(route.params.categoryId)
+    tasks.value = res.data || []
+  } else {
+    const res = await taskApi.getTasks()
     tasks.value = res.data || []
   }
 }

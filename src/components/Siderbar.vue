@@ -14,34 +14,35 @@
     <hr>
     <nav class="two-level-nav">
       <div v-for="menu in menuItems" :key="menu.itemRefId" class="main-menu">
-        <span @click="toggleMenu(menu.itemRefId)" class="menu-toggle">
-          {{ menu.itemName }}
-          <img class="arrow-icon" :src="isMenuOpen[menu.itemRefId] ? iconUp : iconDown" alt="arrow">
-        </span>
-        <div class="sub-menu" v-show="isMenuOpen[menu.itemRefId]">
-          <template v-if="menu.itemType === 'group' && menu.children && menu.children.length">
+        <template v-if="menu.itemType === 'group'">
+          <span @click="toggleMenu(menu.itemRefId)" class="menu-toggle">
+            {{ menu.itemName }}
+            <img class="arrow-icon" :src="isMenuOpen[menu.itemRefId] ? iconUp : iconDown" alt="arrow">
+          </span>
+          <div class="sub-menu" v-show="isMenuOpen[menu.itemRefId]">
             <router-link
               v-for="child in menu.children"
               :key="child.categoryId"
               :to="`/tasks/${child.categoryId}`"
               class="nav-item"
+              active-class="active"
             >
               {{ child.categoryName }}
             </router-link>
-          </template>
-          <template v-else-if="menu.itemType === 'category'">
-            <router-link :to="`/tasks/${menu.itemRefId}`" class="nav-item">
-              查看全部
-            </router-link>
-          </template>
-        </div>
+          </div>
+        </template>
+        <template v-else-if="menu.itemType === 'category'">
+          <router-link :to="`/tasks/${menu.itemRefId}`" class="nav-item" active-class="active">
+            {{ menu.itemName }}
+          </router-link>
+        </template>
       </div>
     </nav>
 
-    <!-- 新增按钮区域 -->
+     <!-- 新增按钮区域 -->
     <div class="sidebar-actions">
-      <button class="action-button">+ 新建分类</button>
-      <button class="action-button">+ 新建分组</button>
+      <button class="action-button" @click="createCategory">+ 新建分类</button>
+      <button class="action-button" @click="createGroup">+ 新建分组</button>
     </div>
 
   </div>
@@ -50,7 +51,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { listDisplayItems } from '@/api/displayItem';
-import { listGroupCategory } from '@/api/group';
+import { listGroupCategory, saveGroup } from '@/api/group';
+import { createTaskCategory } from '@/api/category';
 import iconUp from '@/assets/icons/icon-up.png';
 import iconDown from '@/assets/icons/icon-down.png';
 
@@ -99,6 +101,30 @@ const fetchMenuData = async () => {
     message.error('获取菜单数据失败');
   } finally {
     loading.value = false;
+  }
+};
+
+// 新增分类
+const createCategory = async () => {
+  const name = prompt('请输入分类名称');
+  if (!name) return;
+  try {
+    await createTaskCategory(name);
+    fetchMenuData();
+  } catch (err) {
+    console.error('创建分类失败:', err);
+  }
+};
+
+// 新增分组
+const createGroup = async () => {
+  const name = prompt('请输入分组名称');
+  if (!name) return;
+  try {
+    await saveGroup(name);
+    fetchMenuData();
+  } catch (err) {
+    console.error('创建分组失败:', err);
   }
 };
 
@@ -159,6 +185,9 @@ onMounted(() => {
 /* 两级菜单样式 */
 .two-level-nav {
   padding: 10px 0;
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
 }
 
 .main-menu {
@@ -213,7 +242,7 @@ onMounted(() => {
   font-weight: 500;
 }
 
-.nav-item.active {
+.nav-item:hover:not(.active) {
   background-color: #e6f7ff;
   color: #1890ff;
   border-left-color: #1890ff;
